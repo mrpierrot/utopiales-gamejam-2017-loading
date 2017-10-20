@@ -39,8 +39,6 @@ class Game extends AbstractGame
 	override public function initialize() : Void{
 		AssetsManager.instance.importFromClassMap(Assets);
 		
-		AssetsManager.instance.getAsset("level");
-		
 		renderingEngine.buffer.setTexture(MozaicFactory.makeScanline(Std.int(scale)), 0.1, BlendMode.MULTIPLY);
 		
 		level = _createLevel();
@@ -97,58 +95,23 @@ class Game extends AbstractGame
 				selector : "floor default",
 				layers : [
 					"floor" => {
-						fill : "slabs",
-						pattern : TilePatternUtils.createWeightRandomPattern([10, 2, 10, 10, 10, 10])
+						fill : "slabs2",
+						pattern : TilePatternUtils.createWeightRandomPattern([10, 1, 10])
 					}
 				]
 			}, {
-				selector : "floor clay",
-				layers : [
-					"floor" => {
-						fill : "clay",
-						pattern : TilePatternUtils.createWeightRandomPattern([5, 5, 5, 5])
-					}
-				]
-			}, {
-				selector : "floor clay-2",
-				layers : [
-					"floor" => {
-						fill : "clay-2",
-						pattern : TilePatternUtils.createWeightRandomPattern([10, 0.5, 2, 2, 2, 2, 2, 2, 2, 2])
-					}
-				]
-			}, {
-				selector : "floor wood",
-				layers : [
-					"wood-floor" => {fill:"wood"}
-				]
-			}, {
-				selector : "floor",
-				layers : [
-					"grid" => {
-						fill : "grid",
-						pattern : TilePatternUtils.alternatePattern
-					}
-				]
-			}, {
-				selector : "wall !exit",
+				selector : "wall",
 				opaque : true,
 				collide: true,
 				layers : [
 					"walls" => {
 						fill : "wall-fill",
-						down : "block-wall-down"
+						down : "wall-down"
 					},
 					"wall-over" => {
-						fill : "wall-down-over",
+						fill : "wall-fill",
 						down : "wall-down-over"
 					}
-				]
-			}, {
-				selector : "wall exit",
-				opaque : false,
-				layers : [
-					"walls" => {fill:"door-down"}
 				]
 			}, {
 				selector : "light",
@@ -166,7 +129,7 @@ class Game extends AbstractGame
 				defaultMarker : true,
 				layers : [
 					"over" => {
-						fill : {fill:"blackFill"},
+						fill : {fill:"empty"},
 						down : {fill:"empty"}
 					}
 				]
@@ -207,8 +170,8 @@ class Game extends AbstractGame
 		renderingEngine.add(level.getLayerByName("floor"), Context.LAYER_BACKGROUND);
         renderingEngine.add(level.getLayerByName("wood-floor"), Context.LAYER_BACKGROUND);
         renderingEngine.add(level.getLayerByName("walls"), Context.LAYER_BACKGROUND);
-        renderingEngine.add(lightsContainer, Context.LAYER_BACKGROUND);
-        renderingEngine.add(level.getLayerByName("wall-over"), Context.LAYER_FOREGROUND);
+       // renderingEngine.add(lightsContainer, Context.LAYER_BACKGROUND);
+        //renderingEngine.add(level.getLayerByName("wall-over"), Context.LAYER_FOREGROUND);
         renderingEngine.add(darknessLayer, Context.LAYER_FOREGROUND);
         renderingEngine.add(level.getLayerByName("over"), Context.LAYER_FOREGROUND);
 		
@@ -252,8 +215,6 @@ class Game extends AbstractGame
 		if (renderingEngine.buffer.camera.centerX < world.width)  renderingEngine.buffer.camera.centerX = Std.int(world.width);
 		if (renderingEngine.buffer.camera.centerY > world.y)  renderingEngine.buffer.camera.centerY = Std.int(world.y);
 		if (renderingEngine.buffer.camera.centerY < world.height)  renderingEngine.buffer.camera.centerY = Std.int(world.height);
-		trace(renderingEngine.buffer.camera.centerX, renderingEngine.buffer.width, world);
-		trace(level.cols, level.tileWidth);
 		renderingEngine.buffer.camera.update();
 	}
 }
