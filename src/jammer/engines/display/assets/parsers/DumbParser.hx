@@ -120,7 +120,7 @@ class DumbParser
                 for (i in 0...c)
                 {
                     index = framesIndexes[i];
-                    frames.push(new Rectangle(width * (index % cols), width * Std.int(index / cols), width, height));
+                    frames.push(new Rectangle(width * (index % cols), height * Std.int(index / cols), width, height));
                 }
 				ret.set(name, new AnimationState(name, frames, Reflect.hasField(data,"framerate") ? data.framerate : pFramerate,Reflect.hasField(data,"cues")?data.cues:null));
             }

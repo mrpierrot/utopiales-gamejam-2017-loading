@@ -38,6 +38,7 @@ class DepthManager
         }
         else
         {
+			
             var index : Int = _getLayerIndex(pBefore);
             if (index == 0)
             {
@@ -50,7 +51,8 @@ class DepthManager
                 {
                     if (Std.is(_children[index], Layer))
                     {
-						_children.insert(index+1, layer);
+						_children.insert(index + 1, layer);
+						break;
                     }
                     index--;
                 }

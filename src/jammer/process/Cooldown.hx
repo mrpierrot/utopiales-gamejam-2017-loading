@@ -38,7 +38,7 @@ class Cooldown extends Process
     override public function run(pDelta : Float = 1.0) : Void
     {
         var cd : Dynamic;
-        for (name in Reflect.fields(_map))
+        for (name in _map.keys())
         {
             cd = _map[name];
             if (cd.count - pDelta <= 0)
