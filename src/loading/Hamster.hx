@@ -6,6 +6,7 @@ import jammer.engines.level.Cell;
 import jammer.engines.level.Level;
 import jammer.engines.pathfinding.AStar;
 import jammer.engines.physics.PathUnit;
+import jammer.engines.sounds.SoundManager;
 import jammer.process.Cooldown;
 import jammer.utils.DungeonGeneratorUtils;
 import jammer.utils.MathUtils;
@@ -117,8 +118,8 @@ class Hamster extends PathUnit
         yrMin = yrMin2 = 0;
         yrMax = yrMax2 = 0.8;
         xr = yr = 0.5;
-        //speed *= 0.7;
-        speed *= 1;
+        speed *= 0.5;
+        //speed *= 1;
         //speed *= 2;
         collisionEnabled = true;
         repulseEnabled = true;
@@ -130,13 +131,12 @@ class Hamster extends PathUnit
 		maxLife = 20;
 		life = maxLife;
 		
-		minWorkDuration = Std.int(Assets.FPS * 2);
-		maxWorkDuration = Std.int(Assets.FPS * 4);
+		minWorkDuration = Std.int(Assets.FPS * 8);
+		maxWorkDuration = Std.int(Assets.FPS * 16);
 			
     }
 	
 	public function work(pWorkbench:Workbench):Void{
-		trace("hamster work");
 		this.currentWorkbench = pWorkbench;
 		this.currentWorkbench.worker = this;
 		this.state = "work";
@@ -166,6 +166,8 @@ class Hamster extends PathUnit
 		this.clearPath();
 		this.paused = true;
 		this.state = "shocked";
+		SoundManager.instance.playSFX("shock");
+		SoundManager.instance.playSFX("hamster-shock");
 		cd.add("shocked", SHOCKED_DURATION, function(){
 			trace("ok go to work");
 			this.paused = false;

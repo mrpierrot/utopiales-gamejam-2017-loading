@@ -25,9 +25,9 @@ class Gauge extends JamFlashShape
 		padding = 2;
 		barTopHeight = 2;
 		
-		bgColor = 0x1b191b;
-		barColor = 0xb61814;
-		barTopColor = 0xb64b49;
+		bgColor = 0x050604;
+		barColor = 0xbbf94f;
+
 		
 	}
 	
@@ -43,10 +43,14 @@ class Gauge extends JamFlashShape
 		graphics.beginFill(barColor, 1);
 		graphics.drawRect(padding, padding, barW, height-padding*2);
 		graphics.endFill();
-		if(barTopHeight>0){
-			graphics.beginFill(barTopColor, 1);
-			graphics.drawRect(padding, padding, barW, barTopHeight);
-			graphics.endFill();
-		}
+
+		graphics.beginFill(0xffffff, 1);
+		graphics.drawRect(padding, padding+1, barW, 1);
+		graphics.endFill();
+		
+		graphics.beginFill(0x6cc51d, 1);
+		graphics.drawRect(padding, height-4-padding, barW, 3);
+		graphics.endFill();
+		
 	}
 }

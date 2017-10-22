@@ -27,8 +27,8 @@ class HBoxMessageTheme extends SimpleMessageTheme
         
         fontName = null;
         fontSize = 8;
-        fontColor = 0x1b191b;
-        backgroundColor = 0xc6c6c6;
+        fontColor = 0x5f0a4c;
+        backgroundColor = 0xbdaca8;
         backgroundAlpha = 1;
         borderColor = 0x1b191b;
         borderThickness = 2;

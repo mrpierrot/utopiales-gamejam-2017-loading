@@ -1,5 +1,6 @@
 package loading;
 
+import flash.media.Sound;
 import jammer.engines.display.assets.IAssets;
 import flash.display.BitmapData;
 
@@ -12,6 +13,10 @@ import flash.display.BitmapData;
 @:bitmap("src/assets/wallGround1.png") class Tiles extends BitmapData { }
 @:bitmap("src/assets/level-all.png") class DemoLevel extends BitmapData { }
 @:bitmap("src/assets/Cursor-Sheet.png") class CursorSheet extends BitmapData { }
+
+@:sound('src/assets/sfx/Loading - BGM2 v1.mp3') class Sfx_Music extends Sound { }
+@:sound('src/assets/sfx/electrocute2.mp3') class Sfx_Shock extends Sound { }
+@:sound('src/assets/sfx/lemming1.mp3') class Sfx_HamsterShock extends Sound { }
 
 /**
 	 * ...
@@ -27,6 +32,12 @@ class Assets implements IAssets
     public function new()
     {
     }
+	
+	public static var sounds:Map<String,Class<Sound>> = [ 
+		"music" => Sfx_Music,
+		"shock" => Sfx_Shock,
+		"hamster-shock" => Sfx_HamsterShock
+	];
 	
 	public function getSprites():Map<String, Class<BitmapData>> 
 	{

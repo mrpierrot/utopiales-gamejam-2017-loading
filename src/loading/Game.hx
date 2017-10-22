@@ -21,6 +21,7 @@ import jammer.engines.lights.DarknessLayer;
 import jammer.engines.lights.LightPostRendering;
 import jammer.engines.lights.LightSource;
 import jammer.engines.lights.LightsContainer;
+import jammer.engines.sounds.SoundManager;
 import jammer.utils.LevelUtils;
 import jammer.utils.MathUtils;
 import jammer.utils.TilePatternUtils;
@@ -46,7 +47,7 @@ class Game extends AbstractGame
 	var frameTime :Int; // en frame
 	var timeText : String;
 	var timeTextUI: TextField;
-	var totalTime :Int = 70; // en seconde
+	var totalTime :Int = 60; // en seconde
 	var cursor : JamAnimation;
 	
 	
@@ -61,6 +62,7 @@ class Game extends AbstractGame
 	
 	override public function initialize() : Void{
 		AssetsManager.instance.importFromClassMap(Assets);
+		SoundManager.instance.importFromMap(Assets.sounds);
 		Context.game.messages.addTheme("hbox",new HBoxMessageTheme());
 		
 		renderingEngine.buffer.setTexture(MozaicFactory.makeScanline(Std.int(scale)), 0.1, BlendMode.MULTIPLY);
@@ -71,8 +73,6 @@ class Game extends AbstractGame
 		gauge = new Gauge();
 		gauge.noCamera = true;
 		gauge.progress(100, 100);
-		gauge.barColor = 0x324eb5;
-		gauge.barTopColor = 0x5468b5;
 		gauge.x = Std.int((this.renderingEngine.buffer.camera.width - gauge.width) * 0.5);
 		gauge.y = Std.int((this.renderingEngine.buffer.camera.height - gauge.height) - 5);
 		renderingEngine.add(gauge, Context.LAYER_UI);
@@ -91,6 +91,8 @@ class Game extends AbstractGame
 		
 		cursor = AssetsManager.instance.createAnimation("cursor");
 		renderingEngine.add(cursor, Context.LAYER_CURSOR);
+		
+		SoundManager.instance.playMusic("music");
 		
 		this.start();
 	}
@@ -198,7 +200,6 @@ class Game extends AbstractGame
 				selector : "workbench",
 				render : function(pCell : Cell) : Void
 				{
-					trace("worker");
 					var workbench:Workbench =  createWorkbench(pCell);
 					var worker = createWorker(pCell);
 					worker.work(workbench);
@@ -227,7 +228,7 @@ class Game extends AbstractGame
         
         LevelUtils.renderLevel(newLevel, layers, markers);
 		
-		totalLoading = workers.length * Assets.FPS * 4;
+		totalLoading = workers.length * Assets.FPS * 30;
 		       
         lightsContainer = new LightsContainer(
                 newLevel, 
@@ -284,7 +285,6 @@ class Game extends AbstractGame
 		var worker:Hamster = new Hamster(workbenchs);
 		workers.push(worker);
 		renderingEngine.add(worker.skin, Context.LAYER_CONTENT);
-		trace("halo "+worker.halo);
 		renderingEngine.add(worker.halo, LAYER_HIGHLIGHT);
 		renderingEngine.add(worker.shockedOver, LAYER_SHOCK);
 		worker.level = pCell.level;
@@ -308,6 +308,7 @@ class Game extends AbstractGame
 		cursor.x = mx;
 		cursor.y = my;
 		cursor.state = "pointer";
+		var firstOver : Bool = false;
 		if (!gameover){
 			frameTime--;
 			timeText = formatTime(frameTime);
@@ -315,11 +316,12 @@ class Game extends AbstractGame
 			for (worker in workers) {
 				
 				worker.halo.visible = false;
-				if ((mx >= worker.x - worker.radius )
+				if (!firstOver && (mx >= worker.x - worker.radius )
 				&& (mx <= worker.x + worker.radius ) 
 				&& (my >= worker.y - worker.radius ) 
 				&& (my <= worker.y + worker.radius ) 
 				){
+					firstOver = true;
 					worker.halo.visible = true;
 					cursor.state = "shock1";
 					
@@ -389,6 +391,7 @@ class Game extends AbstractGame
 		
 		if (Mouse.isClicked() && !gameover){
 			
+			cursor.state = "shock2";
 			for (worker in workers) {
 				trace("hamster",worker.x, worker.y);
 				if (mx < worker.x - worker.radius ) continue;
