@@ -22,17 +22,23 @@ class Hamster extends PathUnit
 	public var anim:JamAnimation;
 	
 	public static inline var SHOCKED_DURATION : Int = Std.int(Assets.FPS * 2);
-	public static inline var SHOCKED_COMPLETED : Int = Std.int(Assets.FPS * 2) + 1;
+
 	public var maxLife:Float;
 	public var maxWorkDuration:Int;
 	public var minWorkDuration:Int;
+	public var workbenchs:Array<Workbench>;
+	public var currentWorkbench:Workbench;
+	public var state:String;
 	
 	
-	public function new() 
+	public function new(pWorkbenchs:Array<Workbench>) 
 	{
 		cd = new Cooldown(0, "hamster_" + id);
 		id = _id++;
 		super(AssetsManager.instance.createAnimation("hamster"));
+		
+		this.workbenchs = pWorkbenchs;
+		
 		
 		anim = cast((skin), JamAnimation);
 		
@@ -40,7 +46,7 @@ class Hamster extends PathUnit
 		
 		anim.state = "idle";
 		anim.centerX = 16;
-		anim.centerY = 13;
+		anim.centerY = 16;
 		  
         anim.registerStateCondition("runRight", function() : Bool
                 {
@@ -52,22 +58,23 @@ class Hamster extends PathUnit
                     return (dirX < 0 || (dirY != 0 && lastDirX < 0));
                 });
 				
+		anim.registerStateCondition("shocked", function() : Bool
+                {
+                    return cd.has("shocked");
+                });
+				
 		anim.registerStateCondition("work", function() : Bool
                 {
                     return cd.has("worked");
                 });
 				
-		anim.registerStateCondition("shocked", function() : Bool
-                {
-                    return cd.has("shocked");
-                });
         
         anim.registerStateCondition("idle", function() : Bool
                 {
                     return (dirX == 0 && dirY == 0);
                 });
 				
-		
+		state = "idle";
 	}
 	
 	 override public function reset() : Void
@@ -85,24 +92,84 @@ class Hamster extends PathUnit
         repulseEnabled = true;
         repulseForce /= 1;
         targetMode = false;
-        radius = 9;
+        radius = 16;
         gravity = 0;
 
 		maxLife = 20;
 		life = maxLife;
 		
-		minWorkDuration = Std.int(Assets.FPS * 8);
-		maxWorkDuration = Std.int(Assets.FPS * 16);
-		trace(minWorkDuration, maxWorkDuration);
-		cd.add("worked", MathUtils.irnd(minWorkDuration, maxWorkDuration), function():Void{
-			trace("go away");
-		});		
+		minWorkDuration = Std.int(Assets.FPS * 2);
+		maxWorkDuration = Std.int(Assets.FPS * 4);
+			
     }
+	
+	public function work(pWorkbench:Workbench):Void{
+		this.currentWorkbench = pWorkbench;
+		this.currentWorkbench.worker = this;
+
+		cd.add("worked", MathUtils.irnd(minWorkDuration, maxWorkDuration), goIdle);	
+	}
+	
+	public function goIdle():Void{
+		if(this.currentWorkbench != null){
+			this.currentWorkbench.worker = null;
+			this.currentWorkbench = null;
+		}
+		var cells:Array<Cell> = level.getMarkers("floor");
+		var cell:Cell = cells[MathUtils.irnd(0, cells.length)];
+		this.state = "idle";
+		this.goto(cell);
+		this.start();
+	}
 	
 	
 	public function shocked() : Void {
-		cd.add("shocked",SHOCKED_DURATION);
-		cd.add("shocked_after",SHOCKED_COMPLETED);
+		if (cd.has("shocked")) return;
+		if(this.currentWorkbench != null){
+			this.currentWorkbench.worker = null;
+			this.currentWorkbench = null;
+		}
+		this.clearPath();
+		this.paused = true;
+		cd.add("shocked", SHOCKED_DURATION, function(){
+			trace("ok go to work");
+			this.paused = false;
+			findWorkbench();
+		});
+	}
+	
+
+	public function findWorkbench():Void{
+		var validWorkbenchs:Array<Workbench> = new Array<Workbench>();
+		for (w in workbenchs){
+			if (w.worker == null){
+				validWorkbenchs.push(w);
+			}
+		}
+		
+		var minDist:Int = -1;
+		var nearestW:Workbench =null;
+		for (w in validWorkbenchs){
+			if (minDist < 0){
+				nearestW = w;
+				minDist = MathUtils.intSquareDistance(this.cx, this.cy, w.cell.cx, w.cell.cy);
+			}else{
+				var dist:Int = MathUtils.intSquareDistance(this.cx, this.cy, w.cell.cx, w.cell.cy);
+				if (dist < minDist){
+					nearestW = w;
+					minDist = dist;
+				}
+			}
+		}
+	trace(nearestW);
+		if (nearestW != null){
+			trace(nearestW.cell);
+			this.state = "goWork";
+			this.currentWorkbench = nearestW;
+			this.currentWorkbench.worker = this;
+			this.goto(nearestW.cell);
+			this.start();
+		}
 	}
 	
 	inline override public function execute(pDelta : Float = 1.0) : Void
@@ -110,18 +177,12 @@ class Hamster extends PathUnit
 		super.execute(pDelta);
     }
 	
-	inline public function action(workbenchs:Array<Workbench>) : Void {
-		if (!cd.has("shocked") && cd.has("shocked_after")){
-			
-		}
-	}
-	
 	public inline function goto(end:Cell):Void{
 		var start:Cell = level.getCell(this.cx, this.cy);
 		var result:ObjectMap<Dynamic,Dynamic> = AStar.search(start, end, getNeighborsCells, DungeonGeneratorUtils.getCellsHeuristic, DungeonGeneratorUtils.getCellsHeuristic);
 		var current : Cell = start;
 		var next : Cell;
-		this.clearPath();
+		this.stop();
 		do
 		{
 			//_log("result : ",current);
@@ -141,6 +202,12 @@ class Hamster extends PathUnit
 	override public function pathCompleted():Void 
 	{
 		super.pathCompleted();
+		trace("pathCompleted", this.state);
+		switch(this.state){
+			case "goWork":
+				work(this.currentWorkbench);
+		}
+		
 		//trace("pathCompleted");
 		//var cells:Array<Cell> = Random.shuffle(getNeighborsCells(level.getCell(this.cx, this.cy)));
 		//var cells:Array<Cell> = getNeighborsCells(level.getCell(this.cx, this.cy));

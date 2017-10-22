@@ -211,6 +211,17 @@ class PathUnit extends Unit
     {
         path.clear();
     }
+	
+	public function stop() : Void
+    {
+        clearPath();
+		_currentCell = null;
+		_currentNode = null;
+		_previousCell = null;
+		_pausedCell = null;
+		_pausedNode = null;
+		
+    }
     
     private function pathCompleted() : Void
     {

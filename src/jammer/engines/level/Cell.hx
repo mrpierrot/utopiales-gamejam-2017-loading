@@ -1,7 +1,6 @@
 package jammer.engines.level;
 
-import jammer.collections.Enumeration;
-import flash.utils.Dictionary;
+import jammer.collections.StringEnumeration;
 
 /**
 	 * ...
@@ -14,7 +13,7 @@ class Cell
     public var cx : Int;
     public var cy : Int;
     public var properties : Dynamic;
-    public var markers : Enumeration<String>;
+    public var markers : StringEnumeration;
     public var collide : Bool;
     public var opaque : Bool;
     public var structure : ILevelStructure;
@@ -26,14 +25,14 @@ class Cell
     // light engine
     public var brightness : Float;
     
-    public function new(pLevel : Level, pCx : Int = 0, pCy : Int = 0, pMarkers : Enumeration<String> = null, pProperties : Dynamic = null)
+    public function new(pLevel : Level = null, pCx : Int = 0, pCy : Int = 0, pMarkers : StringEnumeration = null, pProperties : Dynamic = null)
     {
         level = pLevel;
         cx = pCx;
         cy = pCy;
         opaque = collide = false;
         properties = (pProperties != null) ? pProperties : { };
-        markers = (pMarkers != null) ? pMarkers : new Enumeration<String>();
+        markers = (pMarkers != null) ? pMarkers : new StringEnumeration();
         brightness = 0;
         discovered = 0;
     }
@@ -45,6 +44,14 @@ class Cell
         {
             markers.putItem(pMarker);
             level._addMarker(pMarker, this);
+        }
+    }
+	
+	public function addMarkers(pList : Iterable<String>) : Void
+    {
+        for (item in pList)
+        {
+            addMarker(item);
         }
     }
     
@@ -60,6 +67,7 @@ class Cell
     
     public function haveMarker(pMarker : String) : Bool
     {
+        //trace(pMarker," to ",markers," => ",markers.haveItem(pMarker));
         return markers.haveItem(pMarker);
     }
     
@@ -70,4 +78,3 @@ class Cell
         "]";
     }
 }
-

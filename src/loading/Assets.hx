@@ -3,10 +3,10 @@ package loading;
 import jammer.engines.display.assets.IAssets;
 import flash.display.BitmapData;
 
-@:bitmap("src/assets/workbench.png") class WorkbenchSprite extends BitmapData { }
+@:bitmap("src/assets/workbench1.png") class WorkbenchSprite extends BitmapData { }
 @:bitmap("src/assets/HamSpriteSheet.png") class HamsterSprite extends BitmapData { }
 @:bitmap("src/assets/wallGround1.png") class Tiles extends BitmapData { }
-@:bitmap("src/assets/level.png") class DemoLevel extends BitmapData { }
+@:bitmap("src/assets/level-all.png") class DemoLevel extends BitmapData { }
 
 /**
 	 * ...
@@ -47,7 +47,7 @@ class Assets implements IAssets
                             x : "1:4",
                             y : 2
                         },
-						framerate:4,
+						framerate:8,
                         width : TILE_WIDTH,
                         height : TILE_HEIGHT
                     },
@@ -56,7 +56,7 @@ class Assets implements IAssets
                             x : "1:4",
                             y : 1
                         },
-						framerate:4,
+						framerate:8,
                         width : TILE_WIDTH,
                         height : TILE_HEIGHT
                     },
@@ -86,12 +86,12 @@ class Assets implements IAssets
                     },
                     shocked : {
                         frames : {
-                            x : 1,
-                            y : 3
+                            x : "1:2",
+                            y : 5
                         },
                         width : TILE_WIDTH,
                         height : TILE_HEIGHT,
-						framerate:8
+						framerate:4
                     }
                 }
             }
@@ -113,19 +113,15 @@ class Assets implements IAssets
                     placements : {
                         slabs : {
 							x:"1:3",
-							y:2
-						},
-						slabs2 : {
-							x:"1:3",
-							y:3
+							y: 4
 						},
                         "wall-down" : {
                             x : "1:3",
-                            y : 1
+                            y : 2
                         },
                         "wall-fill" : {
-                            x : 4,
-                            y : 1
+                            x : "1:3",
+                            y : 3
                         },
                         "wall-down-over" : {
                             x : "1:3",
@@ -133,7 +129,7 @@ class Assets implements IAssets
                         },
 						"empty":{
 							x : 4,
-                            y : 1
+                            y : 2
 						}
 						
                     }

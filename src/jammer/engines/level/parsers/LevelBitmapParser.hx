@@ -24,7 +24,7 @@ class LevelBitmapParser
 			for (y in 0...level.rows) {
 				color = pSource.getPixel(x, y);
 				if (pConf.exists(color)) {
-					level.getCell(x, y).markers.fill(pConf[color]);
+					level.getCell(x, y).addMarkers(pConf[color]);
 				}
 			}
 		}

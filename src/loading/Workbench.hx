@@ -13,6 +13,7 @@ class Workbench
 
 	public var worker:Hamster;
 	public var skin:JamDisplayObject;
+	public var cell:Cell;
 	
 	public function new() 
 	{

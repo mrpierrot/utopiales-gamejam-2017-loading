@@ -5,6 +5,7 @@ import flash.geom.Rectangle;
 import jammer.AbstractGame;
 import jammer.Context;
 import jammer.controls.Key;
+import jammer.controls.Mouse;
 import jammer.engines.display.MozaicFactory;
 import jammer.engines.display.assets.AssetsManager;
 import jammer.engines.level.Cell;
@@ -97,10 +98,14 @@ class Game extends AbstractGame
 				selector : "floor",
 				layers : [
 					"floor" => {
-						fill : "slabs2",
+						fill : "slabs",
 						pattern : TilePatternUtils.createWeightRandomPattern([10, 1, 10])
 					}
-				]
+				],
+				render : function(pCell : Cell) : Void
+				{
+					pCell.addMarker("floor");
+				}
 			}, {
 				selector : "wall",
 				opaque : true,
@@ -108,11 +113,13 @@ class Game extends AbstractGame
 				layers : [
 					"walls" => {
 						fill : "wall-fill",
-						down : "wall-down"
+						down : "wall-down",
+						pattern : TilePatternUtils.createWeightRandomPattern([10, 10, 1])
 					},
 					"wall-over" => {
 						fill : "wall-fill",
-						down : "wall-down-over"
+						down : "wall-down-over",
+						pattern : TilePatternUtils.createWeightRandomPattern([10, 10, 1])
 					}
 				]
 			}, {
@@ -120,7 +127,8 @@ class Game extends AbstractGame
 				render : function(pCell : Cell) : Void
 				{
 					
-					lights.push(new LightSource(Std.int((pCell.cx + 0.5) * newLevel.tileWidth), Std.int((pCell.cy + 0.5) * newLevel.tileHeight), MathUtils.irnd(3, 5), Std.int( Math.random() * 0xFFFFFF), 1));
+					//lights.push(new LightSource(Std.int((pCell.cx + 0.5) * newLevel.tileWidth), Std.int((pCell.cy + 0.5) * newLevel.tileHeight), MathUtils.irnd(3, 5), Std.int( Math.random() * 0xFFFFFF), 1));
+					lights.push(new LightSource(Std.int((pCell.cx + 0.5) * newLevel.tileWidth), Std.int((pCell.cy + 0.5) * newLevel.tileHeight), MathUtils.irnd(3, 5), 0x3F9E7A, 1));
 				},
 				layers : [
 					"lights" => {fill:"light"}
@@ -130,8 +138,9 @@ class Game extends AbstractGame
 				render : function(pCell : Cell) : Void
 				{
 					trace("worker");
-					createWorker(pCell);
-					createWorkbench(pCell);
+					var workbench:Workbench =  createWorkbench(pCell);
+					var worker = createWorker(pCell);
+					worker.work(workbench);
 				},
 				layers : [
 					"lights" => {fill:"light"}
@@ -150,7 +159,6 @@ class Game extends AbstractGame
 		];
         
         LevelUtils.renderLevel(newLevel, layers, markers);
-		
 		       
         lightsContainer = new LightsContainer(
                 newLevel, 
@@ -182,8 +190,9 @@ class Game extends AbstractGame
 		
 		renderingEngine.add(newLevel.getLayerByName("floor"), Context.LAYER_BACKGROUND);
         renderingEngine.add(newLevel.getLayerByName("walls"), Context.LAYER_BACKGROUND);
-       // renderingEngine.add(lightsContainer, Context.LAYER_BACKGROUND);
-        //renderingEngine.add(level.getLayerByName("wall-over"), Context.LAYER_FOREGROUND);
+        
+        renderingEngine.add(newLevel.getLayerByName("wall-over"), Context.LAYER_FOREGROUND);
+		renderingEngine.add(lightsContainer, Context.LAYER_BACKGROUND);
         renderingEngine.add(darknessLayer, Context.LAYER_FOREGROUND);
         renderingEngine.add(newLevel.getLayerByName("over"), Context.LAYER_FOREGROUND);
 		
@@ -200,7 +209,7 @@ class Game extends AbstractGame
 	}
 	
 	public function createWorker(pCell:Cell):Hamster {
-		var worker:Hamster = new Hamster();
+		var worker:Hamster = new Hamster(workbenchs);
 		workers.push(worker);
 		renderingEngine.add(worker.skin, Context.LAYER_CONTENT);
 		worker.level = pCell.level;
@@ -210,8 +219,9 @@ class Game extends AbstractGame
 	
 	public function createWorkbench(pCell:Cell):Workbench {
 		var workbench:Workbench = new Workbench();
+		workbench.cell = pCell;
 		workbenchs.push(workbench);
-		renderingEngine.add(workbench.skin, LAYER_WORKBENCH);
+		renderingEngine.add(workbench.skin, Context.LAYER_CONTENT);
 		workbench.setCellPosition(pCell);
 		return workbench;
 	}
@@ -221,7 +231,6 @@ class Game extends AbstractGame
 		
 		for (worker in workers) {
 			worker.update(pDelta);
-			worker.action(workbenchs);
 				
 		}
 		
@@ -245,11 +254,29 @@ class Game extends AbstractGame
         {
            renderingEngine.buffer.camera.centerX -= 10;
         }
+		
+		if (Mouse.isClicked()){
+			var mx:Int = Mouse.localX;
+			var my:Int = Mouse.localY;
+			trace(mx, my);
+			for (worker in workers) {
+				trace("hamster",worker.x, worker.y);
+				if (mx < worker.x - worker.radius ) continue;
+				if (mx > worker.x + worker.radius ) continue;
+				if (my < worker.y - worker.radius ) continue;
+				if (my > worker.y + worker.radius ) continue;
+				worker.shocked();
+				break;
+				
+			}
+		}
 
 		if (renderingEngine.buffer.camera.centerX > world.x) renderingEngine.buffer.camera.centerX = Std.int(world.x);
 		if (renderingEngine.buffer.camera.centerX < world.width)  renderingEngine.buffer.camera.centerX = Std.int(world.width);
 		if (renderingEngine.buffer.camera.centerY > world.y)  renderingEngine.buffer.camera.centerY = Std.int(world.y);
 		if (renderingEngine.buffer.camera.centerY < world.height)  renderingEngine.buffer.camera.centerY = Std.int(world.height);
 		renderingEngine.buffer.camera.update();
+		
+		
 	}
 }
