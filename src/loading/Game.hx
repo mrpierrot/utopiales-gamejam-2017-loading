@@ -437,7 +437,7 @@ class Game extends AbstractGame
 		    renderingEngine.clearLayer(Context.LAYER_MESSAGES);
         }
 		
-		if (Mouse.isClicked() && !gameover && playing){
+		if (Mouse.isDown() && !gameover && playing){
 			
 			cursor.state = "shock2";
 			for (worker in workers) {
