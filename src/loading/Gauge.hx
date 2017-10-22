@@ -40,6 +40,10 @@ class Gauge extends JamFlashShape
 		graphics.drawRect(0, 0, width, height);
 		graphics.endFill();
 		
+		graphics.beginFill(0x42322e, 1);
+		graphics.drawRect(padding, padding, width- padding*2, height-padding*2);
+		graphics.endFill();
+		
 		graphics.beginFill(barColor, 1);
 		graphics.drawRect(padding, padding, barW, height-padding*2);
 		graphics.endFill();

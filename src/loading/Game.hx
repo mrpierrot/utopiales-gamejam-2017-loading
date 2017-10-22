@@ -22,6 +22,7 @@ import jammer.engines.lights.LightPostRendering;
 import jammer.engines.lights.LightSource;
 import jammer.engines.lights.LightsContainer;
 import jammer.engines.sounds.SoundManager;
+import jammer.process.Sequence;
 import jammer.utils.LevelUtils;
 import jammer.utils.MathUtils;
 import jammer.utils.TilePatternUtils;
@@ -49,6 +50,9 @@ class Game extends AbstractGame
 	var timeTextUI: TextField;
 	var totalTime :Int = 60; // en seconde
 	var cursor : JamAnimation;
+	var sequence:Sequence;
+	var playing:Bool;
+	var jamSPTime:JamFlashSprite;
 	
 	
 	public static var LAYER_HIGHLIGHT : String = "hightlight";
@@ -79,15 +83,15 @@ class Game extends AbstractGame
 		
 		timeTextUI = AssetsManager.instance.createFlashText(formatTime(Assets.FPS * totalTime), 16);
 
-		var jamSP:JamFlashSprite = new JamFlashSprite();
-		jamSP.sprite.addChild(timeTextUI);
-		jamSP.noCamera = true;
-		jamSP.x = Std.int((this.renderingEngine.buffer.camera.width - timeTextUI.textWidth) * 0.5);
-		jamSP.y = 5;
-		jamSP.sprite.filters = [
+		jamSPTime = new JamFlashSprite();
+		jamSPTime.sprite.addChild(timeTextUI);
+		jamSPTime.noCamera = true;
+		jamSPTime.x = Std.int((this.renderingEngine.buffer.camera.width - timeTextUI.textWidth) * 0.5);
+		jamSPTime.y = 5;
+		jamSPTime.sprite.filters = [
             new GlowFilter(0x0, 1, 2, 2, 4, 1, false)
         ];
-		renderingEngine.add(jamSP, Context.LAYER_UI);
+		renderingEngine.add(jamSPTime, Context.LAYER_UI);
 		
 		cursor = AssetsManager.instance.createAnimation("cursor");
 		renderingEngine.add(cursor, Context.LAYER_CURSOR);
@@ -106,6 +110,9 @@ class Game extends AbstractGame
     {
 		currentLoading = 0;
 		gameover = false;
+		playing = false;
+		gauge.visible = false;
+		jamSPTime.visible = false;
 		frameTime = Assets.FPS * totalTime;
 		timeText = formatTime(frameTime);
 		
@@ -276,6 +283,35 @@ class Game extends AbstractGame
 		
 		//renderingEngine.buffer.camera.centerX = Std.int(world.width * 0.5);
 		//renderingEngine.buffer.camera.centerY = Std.int(world.height * 0.5);
+		
+		sequence = Sequence.create([
+			function(cb:Int->Void):Void{  
+				messages.create("Hamster Damn", "center", "center", "simple"); cb(100); 
+				messages.create("Appuyez sur [ESPACE] pour continuer", "center", "bottom", "hbox", -1, 
+					function():Bool{ 
+						if (Key.isToggled(Key.SPACE)){ return true; }
+						else return false;
+					}
+				);
+			},
+			function(cb:Int->Void):Void { messages.create("Vos Hamsters font avancer un programme d’une importance capitale !", "center", "center", "simple"); cb(100); },
+			function(cb:Int->Void):Void { messages.create("Mais ils procrastinent à mort. Maudits Hamsters !", "center", "center", "simple"); cb(100); },
+			function(cb:Int->Void):Void { messages.create("Aidez-les à retrouver le chemin de la productivité.", "center", "center", "simple"); cb(100); },
+			function(cb:Int->Void):Void { messages.create("Mettez les tir-au-flancs au “courant” de la deadline en cliquant dessus,", "center", "center", "simple"); cb(100); },
+			function(cb:Int->Void):Void { messages.create("mais attention, les bosseurs n’ont pas besoin de “jus”", "center", "center", "simple"); cb(100); },
+			function(cb:Int->Void):Void{ 
+				messages.create("Utilises Z,Q,S,D pour deplacer la caméra,\ncliquez sur un hamster pour le taser.", "center", "center", "hbox", -1,
+					function():Bool{ 
+						if (Key.isToggled(Key.SPACE)){cb(0);return true; }
+						else return false;
+					}
+				);
+			},
+			function(cb:Int->Void):Void{ 
+				playing = true;
+				
+			}
+		]);
 
 		
 		return newLevel;
@@ -309,7 +345,9 @@ class Game extends AbstractGame
 		cursor.y = my;
 		cursor.state = "pointer";
 		var firstOver : Bool = false;
-		if (!gameover){
+		if (!gameover && playing){
+			gauge.visible = true;
+			jamSPTime.visible = true;
 			frameTime--;
 			timeText = formatTime(frameTime);
 			timeTextUI.text = timeText;
@@ -338,25 +376,27 @@ class Game extends AbstractGame
 			if (currentLoading >= totalLoading ){
 				currentLoading = totalLoading;
 				gameover = true;
+				playing = false;
 				trace("gameover");
 				for (worker in workers) {
 					worker.end();
 					
 				}
 				
-				messages.create("Vous avez gagné", "center", "center", "hbox", -1);
+				messages.create("Vous avez fait preuve de zèle, c'est bien.\nVous avez gagnez.\nMais méfiez-vous tout de même des hamsters syndicalistes.", "center", "center", "hbox", -1);
 				messages.create("Presse R\npour recommencer", "right", "bottom", "hbox", -1);
 			}
 			
 			if (frameTime < 0 ){
 				gameover = true;
+				playing = false;
 				trace("gameover");
 				for (worker in workers) {
 					worker.end();
 					
 				}
 				
-				messages.create("Vous avez perdu", "center", "center", "hbox", -1);
+				messages.create("Vous faites un très mauvais manager.\nC'est perdu.", "center", "center", "hbox", -1);
 				messages.create("Presse R\npour recommencer", "right", "bottom", "hbox", -1);
 			}
 		}
@@ -389,7 +429,15 @@ class Game extends AbstractGame
            this.start();
         }
 		
-		if (Mouse.isClicked() && !gameover){
+		if (!playing && Key.isToggled(Key.SPACE))
+        {
+			playing = true;
+            sequence.destroyed = true;
+			
+		    renderingEngine.clearLayer(Context.LAYER_MESSAGES);
+        }
+		
+		if (Mouse.isClicked() && !gameover && playing){
 			
 			cursor.state = "shock2";
 			for (worker in workers) {

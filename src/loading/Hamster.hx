@@ -47,7 +47,7 @@ class Hamster extends PathUnit
 		
 		halo = AssetsManager.instance.createAnimation("hamster");
 		halo.frameData.asset = AssetsManager.instance.createSprite("halo").frameData.asset;
-		//halo.visible = false;
+		halo.visible = false;
 		
 		shockedOver = AssetsManager.instance.createAnimation("hamster");
 		shockedOver.frameData.asset = AssetsManager.instance.createSprite("shocked").frameData.asset;
@@ -131,8 +131,8 @@ class Hamster extends PathUnit
 		maxLife = 20;
 		life = maxLife;
 		
-		minWorkDuration = Std.int(Assets.FPS * 8);
-		maxWorkDuration = Std.int(Assets.FPS * 16);
+		minWorkDuration = Std.int(Assets.FPS * 4);
+		maxWorkDuration = Std.int(Assets.FPS * 32);
 			
     }
 	
