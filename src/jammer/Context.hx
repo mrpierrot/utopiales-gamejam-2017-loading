@@ -13,6 +13,7 @@ class Context
     public static inline var LAYER_CONTENT : String = "content";
     public static inline var LAYER_PARTICLES : String = "particles";
     public static inline var LAYER_MESSAGES : String = "messages";
+    public static inline var LAYER_UI : String = "ui";
     
     public static var stage : Stage;
     public static var fps : Int;

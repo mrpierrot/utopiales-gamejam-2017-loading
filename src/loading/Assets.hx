@@ -5,8 +5,10 @@ import flash.display.BitmapData;
 
 @:bitmap("src/assets/workbench1.png") class WorkbenchSprite extends BitmapData { }
 @:bitmap("src/assets/HamSpriteSheet.png") class HamsterSprite extends BitmapData { }
+@:bitmap("src/assets/HamSpriteSheetContour.png") class HaloSprite extends BitmapData { }
+@:bitmap("src/assets/HamSpriteSheetShock.png") class ShockSprite extends BitmapData { }
 @:bitmap("src/assets/wallGround1.png") class Tiles extends BitmapData { }
-@:bitmap("src/assets/level-all.png") class DemoLevel extends BitmapData { }
+@:bitmap("src/assets/level.png") class DemoLevel extends BitmapData { }
 
 /**
 	 * ...
@@ -27,7 +29,9 @@ class Assets implements IAssets
 	{
 		return [
 			"level" => DemoLevel,
-			"workbench" => WorkbenchSprite
+			"workbench" => WorkbenchSprite,
+			"halo" => HaloSprite,
+			"shocked" => ShockSprite
 		];
 	}
     
@@ -39,7 +43,7 @@ class Assets implements IAssets
             hamster : {
                 asset : HamsterSprite,
                 framerate : 8,
-                initState : "staticRight",
+                initState : "idle",
                 states : {
                
                     runRight : {
@@ -55,6 +59,24 @@ class Assets implements IAssets
                         frames : {
                             x : "1:4",
                             y : 1
+                        },
+						framerate:8,
+                        width : TILE_WIDTH,
+                        height : TILE_HEIGHT
+                    },
+					runUp : {
+                        frames : {
+                            x : "1:4",
+                            y : 7
+                        },
+						framerate:8,
+                        width : TILE_WIDTH,
+                        height : TILE_HEIGHT
+                    },
+                    runDown : {
+                        frames : {
+                            x : "1:4",
+                            y : 6
                         },
 						framerate:8,
                         width : TILE_WIDTH,

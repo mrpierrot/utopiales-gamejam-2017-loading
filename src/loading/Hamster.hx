@@ -29,6 +29,8 @@ class Hamster extends PathUnit
 	public var workbenchs:Array<Workbench>;
 	public var currentWorkbench:Workbench;
 	public var state:String;
+	public var halo:JamAnimation;
+	public var shockedOver:JamAnimation;
 	
 	
 	public function new(pWorkbenchs:Array<Workbench>) 
@@ -42,6 +44,13 @@ class Hamster extends PathUnit
 		
 		anim = cast((skin), JamAnimation);
 		
+		halo = AssetsManager.instance.createAnimation("hamster");
+		halo.frameData.asset = AssetsManager.instance.createSprite("halo").frameData.asset;
+		//halo.visible = false;
+		
+		shockedOver = AssetsManager.instance.createAnimation("hamster");
+		shockedOver.frameData.asset = AssetsManager.instance.createSprite("shocked").frameData.asset;
+		
 		
 		
 		anim.state = "idle";
@@ -50,13 +59,24 @@ class Hamster extends PathUnit
 		  
         anim.registerStateCondition("runRight", function() : Bool
                 {
-                    return (dirX > 0 || (dirY != 0 && lastDirX > 0));
+                    return dirX > 0;
                 });
         
         anim.registerStateCondition("runLeft", function() : Bool
                 {
-                    return (dirX < 0 || (dirY != 0 && lastDirX < 0));
+                    return dirX < 0;
                 });
+        
+        anim.registerStateCondition("runDown", function() : Bool
+                {
+                    return dirY > 0;
+                });
+        
+        anim.registerStateCondition("runUp", function() : Bool
+                {
+                    return dirY < 0;
+                });
+        
 				
 		anim.registerStateCondition("shocked", function() : Bool
                 {
@@ -74,7 +94,19 @@ class Hamster extends PathUnit
                     return (dirX == 0 && dirY == 0);
                 });
 				
+		halo.onPreRender = function(pFrame:Int):Void{
+			halo.state = anim.state;
+			halo._startFrameIndex = anim._startFrameIndex;
+		}
+		
+		shockedOver.onPreRender = function(pFrame:Int):Void{
+			shockedOver.state = anim.state;
+			shockedOver._startFrameIndex = anim._startFrameIndex;
+		}
+				
 		state = "idle";
+		
+		
 	}
 	
 	 override public function reset() : Void
@@ -104,9 +136,11 @@ class Hamster extends PathUnit
     }
 	
 	public function work(pWorkbench:Workbench):Void{
+		trace("hamster work");
 		this.currentWorkbench = pWorkbench;
 		this.currentWorkbench.worker = this;
-
+		this.state = "work";
+		cd.remove("work");
 		cd.add("worked", MathUtils.irnd(minWorkDuration, maxWorkDuration), goIdle);	
 	}
 	
@@ -131,6 +165,7 @@ class Hamster extends PathUnit
 		}
 		this.clearPath();
 		this.paused = true;
+		this.state = "shocked";
 		cd.add("shocked", SHOCKED_DURATION, function(){
 			trace("ok go to work");
 			this.paused = false;
@@ -140,6 +175,10 @@ class Hamster extends PathUnit
 	
 
 	public function findWorkbench():Void{
+		if (this.currentWorkbench != null){
+			work(this.currentWorkbench);
+			return;
+		}
 		var validWorkbenchs:Array<Workbench> = new Array<Workbench>();
 		for (w in workbenchs){
 			if (w.worker == null){
@@ -161,20 +200,38 @@ class Hamster extends PathUnit
 				}
 			}
 		}
-	trace(nearestW);
+		trace(nearestW);
 		if (nearestW != null){
-			trace(nearestW.cell);
+			trace("go work at :[ "+nearestW.cell.cx,nearestW.cell.cy+"]");
 			this.state = "goWork";
 			this.currentWorkbench = nearestW;
 			this.currentWorkbench.worker = this;
-			this.goto(nearestW.cell);
-			this.start();
+			trace(this.cx, this.cy);
+			if (nearestW.cell.cx == this.cx && nearestW.cell.cy == this.cy){
+				this.stop();
+				work(this.currentWorkbench);
+			}else{
+				this.goto(nearestW.cell);
+				this.start();
+			}
+			
+		}else{
+			state = "idle";
 		}
+	}
+	
+	public function end(){
+		this.stop();
+		this.cd.remove("work");
 	}
 	
 	inline override public function execute(pDelta : Float = 1.0) : Void
     {
 		super.execute(pDelta);
+		halo.x = skin.x;
+		halo.y = skin.y;
+		shockedOver.x = skin.x;
+		shockedOver.y = skin.y;
     }
 	
 	public inline function goto(end:Cell):Void{
@@ -217,6 +274,7 @@ class Hamster extends PathUnit
 	function getNeighborsCells(pCurrent : Cell) : Array<Cell>
 	{
 		neightbors.splice(0, neightbors.length);
+		if (pCurrent == null) return neightbors;
 		var neightbor : Cell;
 		neightbor = level.getCell(pCurrent.cx, pCurrent.cy + 1);
 		if (neightbor != null && !neightbor.collide) neightbors.push(neightbor);

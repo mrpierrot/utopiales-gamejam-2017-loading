@@ -57,6 +57,7 @@ class AbstractGame
         renderingEngine.createLayer(Context.LAYER_FOREGROUND);
         renderingEngine.createLayer(Context.LAYER_PARTICLES);
         renderingEngine.createLayer(Context.LAYER_MESSAGES);
+        renderingEngine.createLayer(Context.LAYER_UI);
         
         renderingEngine.add(particles, Context.LAYER_PARTICLES);
         

@@ -1,6 +1,7 @@
 package loading;
 import flash.display.BlendMode;
 import flash.display.Sprite;
+import flash.display3D.textures.VideoTexture;
 import flash.geom.Rectangle;
 import jammer.AbstractGame;
 import jammer.Context;
@@ -33,7 +34,13 @@ class Game extends AbstractGame
 	var world:Rectangle;
 	var workers:Array<Hamster>;
 	var workbenchs:Array<Workbench>;
-	public static var LAYER_WORKBENCH : String = "workbenchs";
+	var currentLoading :Int;
+	var totalLoading :Int;
+	var gameover: Bool;
+	var gauge:Gauge;
+	
+	public static var LAYER_HIGHLIGHT : String = "hightlight";
+	public static var LAYER_SHOCK : String = "shock";
 	 
 	public function new(pContainer : Sprite) 
 	{
@@ -43,17 +50,43 @@ class Game extends AbstractGame
 	
 	override public function initialize() : Void{
 		AssetsManager.instance.importFromClassMap(Assets);
+		Context.game.messages.addTheme("hbox",new HBoxMessageTheme());
 		
 		renderingEngine.buffer.setTexture(MozaicFactory.makeScanline(Std.int(scale)), 0.1, BlendMode.MULTIPLY);
-		renderingEngine.createLayer(LAYER_WORKBENCH, null, Context.LAYER_FOREGROUND);
+		renderingEngine.createLayer(LAYER_HIGHLIGHT, null, Context.LAYER_MESSAGES);
+		renderingEngine.createLayer(LAYER_SHOCK, null, Context.LAYER_MESSAGES);
 		workers = new Array<Hamster>();
 		workbenchs = new Array<Workbench>();
+		gauge = new Gauge();
+		gauge.noCamera = true;
+		gauge.progress(100, 100);
+		gauge.barColor = 0x324eb5;
+		gauge.barTopColor = 0x5468b5;
+		gauge.x = Std.int((this.renderingEngine.buffer.camera.width - gauge.width) * 0.5);
+		gauge.y = Std.int((this.renderingEngine.buffer.camera.height - gauge.height) - 5);
+		renderingEngine.add(gauge, Context.LAYER_UI);
+		
+		this.start();
+	}
+	
+	public function start() :Void {
 		level = _createLevel();
 	}
 	
 	
 	private function _createLevel() : Level
     {
+		currentLoading = 0;
+		gameover = false;
+		
+		workers.splice(0, workers.length);
+		workbenchs.splice(0, workbenchs.length);
+		renderingEngine.clearLayer(Context.LAYER_BACKGROUND);
+        renderingEngine.clearLayer(Context.LAYER_FOREGROUND);
+        renderingEngine.clearLayer(Context.LAYER_CONTENT);
+        renderingEngine.clearLayer(Context.LAYER_MESSAGES);
+        renderingEngine.clearLayer(LAYER_SHOCK);
+        renderingEngine.clearLayer(LAYER_HIGHLIGHT);
 		
 		var floor:String = "floor";
 		
@@ -159,6 +192,8 @@ class Game extends AbstractGame
 		];
         
         LevelUtils.renderLevel(newLevel, layers, markers);
+		
+		totalLoading = workers.length * Assets.FPS * 4;
 		       
         lightsContainer = new LightsContainer(
                 newLevel, 
@@ -184,8 +219,8 @@ class Game extends AbstractGame
          
         newLevel.getLayerByName("wall-over").y = -8;
 		
-		renderingEngine.clearLayer(Context.LAYER_BACKGROUND);
-        renderingEngine.clearLayer(Context.LAYER_FOREGROUND);
+		
+		trace(renderingEngine.children);
        
 		
 		renderingEngine.add(newLevel.getLayerByName("floor"), Context.LAYER_BACKGROUND);
@@ -203,7 +238,10 @@ class Game extends AbstractGame
 		
 		renderingEngine.buffer.camera.centerX = 0;
 		renderingEngine.buffer.camera.centerY = 0;
-		//renderingEngine.buffer.camera.world  = world;
+		
+		//renderingEngine.buffer.camera.centerX = Std.int(world.width * 0.5);
+		//renderingEngine.buffer.camera.centerY = Std.int(world.height * 0.5);
+
 		
 		return newLevel;
 	}
@@ -212,6 +250,9 @@ class Game extends AbstractGame
 		var worker:Hamster = new Hamster(workbenchs);
 		workers.push(worker);
 		renderingEngine.add(worker.skin, Context.LAYER_CONTENT);
+		trace("halo "+worker.halo);
+		renderingEngine.add(worker.halo, LAYER_HIGHLIGHT);
+		renderingEngine.add(worker.shockedOver, LAYER_SHOCK);
 		worker.level = pCell.level;
 		worker.setCellPosition(pCell.cx, pCell.cy);
 		return worker;
@@ -228,11 +269,42 @@ class Game extends AbstractGame
 	
 	override public function update(pDelta : Float = 1.0) : Void
     {
-		
-		for (worker in workers) {
-			worker.update(pDelta);
+		var mx:Int = Mouse.localX;
+		var my:Int = Mouse.localY;
+		if(!gameover){
+			for (worker in workers) {
 				
+				worker.halo.visible = false;
+				if ((mx >= worker.x - worker.radius )
+				&& (mx <= worker.x + worker.radius ) 
+				&& (my >= worker.y - worker.radius ) 
+				&& (my <= worker.y + worker.radius ) 
+				){
+					worker.halo.visible = true;
+				}
+				worker.update(pDelta);
+				if (worker.state == "work") {
+					currentLoading ++;
+				}
+					
+			}
+			gauge.progress(currentLoading, totalLoading);
+		
+			if (currentLoading >= totalLoading ){
+				currentLoading = totalLoading;
+				gameover = true;
+				trace("gameover");
+				for (worker in workers) {
+					worker.end();
+					
+				}
+				
+				messages.create("Vous avez gagné", "center", "center", "hbox", -1);
+				messages.create("Presse R\npour recommencer", "right", "bottom", "hbox", -1);
+			}
 		}
+		
+		
 		
 		renderingEngine.ysort(Context.LAYER_CONTENT);
 		
@@ -255,9 +327,13 @@ class Game extends AbstractGame
            renderingEngine.buffer.camera.centerX -= 10;
         }
 		
+		 if (Key.isDown(Key.R))
+        {
+           this.start();
+        }
+		
 		if (Mouse.isClicked()){
-			var mx:Int = Mouse.localX;
-			var my:Int = Mouse.localY;
+			
 			trace(mx, my);
 			for (worker in workers) {
 				trace("hamster",worker.x, worker.y);

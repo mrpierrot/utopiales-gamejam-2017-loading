@@ -30,7 +30,7 @@ class JamAnimation extends JamDisplayObject
     private var _globalToLocalFramerate : Float;
     private var _playing : Bool;
     private var _rawFrameIndex : Int;
-    private var _startFrameIndex : Int;
+    public var _startFrameIndex : Int;
     private var _conditions : Array<Condition>;
     
     public var eventsEnabled : Bool;
@@ -175,7 +175,11 @@ class JamAnimation extends JamDisplayObject
             if (_currentState != null)
             {
                 _currentFrameIndex = Std.int(((_rawFrameIndex - _startFrameIndex) * _globalToLocalFramerate) % _currentStateSize);
-                _currentFrame = _currentState.frames[_currentFrameIndex];
+              /*  trace("_startFrameIndex", _startFrameIndex);
+                trace("_rawFrameIndex", _rawFrameIndex);
+                trace("_currentStateSize", _currentStateSize);
+                trace("_currentFrameIndex", _currentFrameIndex);*/
+				_currentFrame = _currentState.frames[_currentFrameIndex];
                 frameData.source = _currentFrame;
                 frameData.destination.x = x;
                 frameData.destination.y = y;
