@@ -3,6 +3,7 @@ import jammer.engines.display.assets.AssetsManager;
 import jammer.engines.display.types.JamDisplayObject;
 import jammer.engines.level.Cell;
 import jammer.engines.physics.Entity;
+import jammer.utils.MathUtils;
 
 /**
  * ...
@@ -17,7 +18,7 @@ class Workbench
 	
 	public function new() 
 	{
-		skin = AssetsManager.instance.createSprite("workbench");
+		skin = AssetsManager.instance.createSprite("workbench"+MathUtils.irnd(1,3));
 	}
 	
 	public function setCellPosition(pCell:Cell):Void 

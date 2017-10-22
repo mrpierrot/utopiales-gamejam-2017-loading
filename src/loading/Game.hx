@@ -2,13 +2,18 @@ package loading;
 import flash.display.BlendMode;
 import flash.display.Sprite;
 import flash.display3D.textures.VideoTexture;
+import flash.filters.GlowFilter;
 import flash.geom.Rectangle;
+import flash.text.TextField;
 import jammer.AbstractGame;
 import jammer.Context;
 import jammer.controls.Key;
 import jammer.controls.Mouse;
 import jammer.engines.display.MozaicFactory;
 import jammer.engines.display.assets.AssetsManager;
+import jammer.engines.display.text.JamFlashText;
+import jammer.engines.display.types.JamAnimation;
+import jammer.engines.display.types.JamFlashSprite;
 import jammer.engines.level.Cell;
 import jammer.engines.level.Level;
 import jammer.engines.level.parsers.LevelBitmapParser;
@@ -38,6 +43,12 @@ class Game extends AbstractGame
 	var totalLoading :Int;
 	var gameover: Bool;
 	var gauge:Gauge;
+	var frameTime :Int; // en frame
+	var timeText : String;
+	var timeTextUI: TextField;
+	var totalTime :Int = 70; // en seconde
+	var cursor : JamAnimation;
+	
 	
 	public static var LAYER_HIGHLIGHT : String = "hightlight";
 	public static var LAYER_SHOCK : String = "shock";
@@ -66,6 +77,21 @@ class Game extends AbstractGame
 		gauge.y = Std.int((this.renderingEngine.buffer.camera.height - gauge.height) - 5);
 		renderingEngine.add(gauge, Context.LAYER_UI);
 		
+		timeTextUI = AssetsManager.instance.createFlashText(formatTime(Assets.FPS * totalTime), 16);
+
+		var jamSP:JamFlashSprite = new JamFlashSprite();
+		jamSP.sprite.addChild(timeTextUI);
+		jamSP.noCamera = true;
+		jamSP.x = Std.int((this.renderingEngine.buffer.camera.width - timeTextUI.textWidth) * 0.5);
+		jamSP.y = 5;
+		jamSP.sprite.filters = [
+            new GlowFilter(0x0, 1, 2, 2, 4, 1, false)
+        ];
+		renderingEngine.add(jamSP, Context.LAYER_UI);
+		
+		cursor = AssetsManager.instance.createAnimation("cursor");
+		renderingEngine.add(cursor, Context.LAYER_CURSOR);
+		
 		this.start();
 	}
 	
@@ -78,6 +104,8 @@ class Game extends AbstractGame
     {
 		currentLoading = 0;
 		gameover = false;
+		frameTime = Assets.FPS * totalTime;
+		timeText = formatTime(frameTime);
 		
 		workers.splice(0, workers.length);
 		workbenchs.splice(0, workbenchs.length);
@@ -179,6 +207,12 @@ class Game extends AbstractGame
 					"lights" => {fill:"light"}
 				]
 			},{
+				selector : "floor !workbench",
+				render : function(pCell : Cell) : Void
+				{
+					pCell.addMarker("idle-available");
+				}
+			},{
 				selector : "",
 				opaque : true,
 				defaultMarker : true,
@@ -270,8 +304,14 @@ class Game extends AbstractGame
 	override public function update(pDelta : Float = 1.0) : Void
     {
 		var mx:Int = Mouse.localX;
-		var my:Int = Mouse.localY;
-		if(!gameover){
+		var my:Int = Mouse.localY-6;
+		cursor.x = mx;
+		cursor.y = my;
+		cursor.state = "pointer";
+		if (!gameover){
+			frameTime--;
+			timeText = formatTime(frameTime);
+			timeTextUI.text = timeText;
 			for (worker in workers) {
 				
 				worker.halo.visible = false;
@@ -281,6 +321,8 @@ class Game extends AbstractGame
 				&& (my <= worker.y + worker.radius ) 
 				){
 					worker.halo.visible = true;
+					cursor.state = "shock1";
+					
 				}
 				worker.update(pDelta);
 				if (worker.state == "work") {
@@ -289,6 +331,7 @@ class Game extends AbstractGame
 					
 			}
 			gauge.progress(currentLoading, totalLoading);
+			
 		
 			if (currentLoading >= totalLoading ){
 				currentLoading = totalLoading;
@@ -300,6 +343,18 @@ class Game extends AbstractGame
 				}
 				
 				messages.create("Vous avez gagné", "center", "center", "hbox", -1);
+				messages.create("Presse R\npour recommencer", "right", "bottom", "hbox", -1);
+			}
+			
+			if (frameTime < 0 ){
+				gameover = true;
+				trace("gameover");
+				for (worker in workers) {
+					worker.end();
+					
+				}
+				
+				messages.create("Vous avez perdu", "center", "center", "hbox", -1);
 				messages.create("Presse R\npour recommencer", "right", "bottom", "hbox", -1);
 			}
 		}
@@ -332,9 +387,8 @@ class Game extends AbstractGame
            this.start();
         }
 		
-		if (Mouse.isClicked()){
+		if (Mouse.isClicked() && !gameover){
 			
-			trace(mx, my);
 			for (worker in workers) {
 				trace("hamster",worker.x, worker.y);
 				if (mx < worker.x - worker.radius ) continue;
@@ -354,5 +408,12 @@ class Game extends AbstractGame
 		renderingEngine.buffer.camera.update();
 		
 		
+	}
+	
+	function formatTime(pFrameTime :Int) :String {
+		var t:Int = Math.round(pFrameTime / Assets.FPS);
+		var min:Int = Std.int(t / 60);
+		var seconds:Int = t % 60;
+		return (min < 10 ? "0" + min:min+"") + ":" + (seconds < 10 ? "0" + seconds:seconds+"");
 	}
 }

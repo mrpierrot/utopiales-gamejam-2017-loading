@@ -253,7 +253,7 @@ class AssetsManager
         tf.htmlText = pText;
         tf.embedFonts = true;
         tf.multiline = true;
-        tf.autoSize = pAlign;
+        if(pAlign!=null)tf.autoSize = pAlign;
         tf.selectable = tf.mouseEnabled = tf.mouseWheelEnabled = false;
         return tf;
     }

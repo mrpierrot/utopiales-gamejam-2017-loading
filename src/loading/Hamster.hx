@@ -149,7 +149,7 @@ class Hamster extends PathUnit
 			this.currentWorkbench.worker = null;
 			this.currentWorkbench = null;
 		}
-		var cells:Array<Cell> = level.getMarkers("floor");
+		var cells:Array<Cell> = level.getMarkers("idle-available");
 		var cell:Cell = cells[MathUtils.irnd(0, cells.length)];
 		this.state = "idle";
 		this.goto(cell);

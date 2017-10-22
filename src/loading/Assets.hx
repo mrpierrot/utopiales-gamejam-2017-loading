@@ -3,12 +3,15 @@ package loading;
 import jammer.engines.display.assets.IAssets;
 import flash.display.BitmapData;
 
-@:bitmap("src/assets/workbench1.png") class WorkbenchSprite extends BitmapData { }
+@:bitmap("src/assets/workbench1.png") class WorkbenchSprite1 extends BitmapData { }
+@:bitmap("src/assets/workbench2.png") class WorkbenchSprite2 extends BitmapData { }
+@:bitmap("src/assets/workbench3.png") class WorkbenchSprite3 extends BitmapData { }
 @:bitmap("src/assets/HamSpriteSheet.png") class HamsterSprite extends BitmapData { }
 @:bitmap("src/assets/HamSpriteSheetContour.png") class HaloSprite extends BitmapData { }
 @:bitmap("src/assets/HamSpriteSheetShock.png") class ShockSprite extends BitmapData { }
 @:bitmap("src/assets/wallGround1.png") class Tiles extends BitmapData { }
-@:bitmap("src/assets/level.png") class DemoLevel extends BitmapData { }
+@:bitmap("src/assets/level-all.png") class DemoLevel extends BitmapData { }
+@:bitmap("src/assets/Cursor-Sheet.png") class CursorSheet extends BitmapData { }
 
 /**
 	 * ...
@@ -29,7 +32,9 @@ class Assets implements IAssets
 	{
 		return [
 			"level" => DemoLevel,
-			"workbench" => WorkbenchSprite,
+			"workbench1" => WorkbenchSprite1,
+			"workbench2" => WorkbenchSprite2,
+			"workbench3" => WorkbenchSprite3,
 			"halo" => HaloSprite,
 			"shocked" => ShockSprite
 		];
@@ -40,6 +45,29 @@ class Assets implements IAssets
     {
 		
         return {
+			cursor : {
+                asset : CursorSheet,
+                framerate : 1,
+                initState : "pointer",
+                states : {
+					pointer : {
+						frames: "0",
+						width : 20,
+                        height : 20
+					},
+					shock1 : {
+						frames: "1",
+						width : 20,
+                        height : 20
+					},
+					shock2 : {
+						frames: "2",
+						width : 20,
+                        height : 20
+					}
+					
+				}
+			},
             hamster : {
                 asset : HamsterSprite,
                 framerate : 8,
