@@ -137,6 +137,7 @@ class Hamster extends PathUnit
     }
 	
 	public function work(pWorkbench:Workbench):Void{
+		if (pWorkbench == null) return;
 		this.currentWorkbench = pWorkbench;
 		this.currentWorkbench.worker = this;
 		this.state = "work";

@@ -11,6 +11,7 @@ import jammer.controls.Key;
 import jammer.controls.Mouse;
 import jammer.engines.display.MozaicFactory;
 import jammer.engines.display.assets.AssetsManager;
+import jammer.engines.display.camera.CameraSmoothMovement;
 import jammer.engines.display.text.JamFlashText;
 import jammer.engines.display.types.JamAnimation;
 import jammer.engines.display.types.JamFlashSprite;
@@ -53,6 +54,7 @@ class Game extends AbstractGame
 	var sequence:Sequence;
 	var playing:Bool;
 	var jamSPTime:JamFlashSprite;
+	var currentFocus:Hamster;
 	
 	
 	public static var LAYER_HIGHLIGHT : String = "hightlight";
@@ -95,6 +97,9 @@ class Game extends AbstractGame
 		
 		cursor = AssetsManager.instance.createAnimation("cursor");
 		renderingEngine.add(cursor, Context.LAYER_CURSOR);
+		cursor.x = Std.int(renderingEngine.buffer.width * 0.5);
+		cursor.y = Std.int(renderingEngine.buffer.height * 0.5);
+		
 		
 		SoundManager.instance.playMusic("music");
 		
@@ -280,8 +285,10 @@ class Game extends AbstractGame
 			-(newLevel.rows * newLevel.tileHeight - renderingEngine.buffer.height * 0.5)
 		);
 		
-		renderingEngine.buffer.camera.centerX = 0;
-		renderingEngine.buffer.camera.centerY = 0;
+		
+		
+		//renderingEngine.buffer.camera.centerX = 0;
+		//renderingEngine.buffer.camera.centerY = 0;
 		
 		//renderingEngine.buffer.camera.centerX = Std.int(world.width * 0.5);
 		//renderingEngine.buffer.camera.centerY = Std.int(world.height * 0.5);
@@ -313,7 +320,12 @@ class Game extends AbstractGame
 				playing = true;
 			}
 		]);
-
+		
+		renderingEngine.buffer.camera.movementStrategy = new CameraSmoothMovement();
+        renderingEngine.buffer.camera.world = newLevel.getBounds();
+        renderingEngine.buffer.camera.lockOn(cursor);
+        renderingEngine.buffer.camera.reset();
+		world = renderingEngine.buffer.camera.world;
 		
 		return newLevel;
 	}
@@ -340,10 +352,35 @@ class Game extends AbstractGame
 	
 	override public function update(pDelta : Float = 1.0) : Void
     {
-		var mx:Int = Mouse.localX;
-		var my:Int = Mouse.localY-6;
-		cursor.x = mx;
-		cursor.y = my;
+		//cursor.x = Mouse.localX;
+		//cursor.y = Mouse.localY-6;
+		if (Key.isDown(Key.UP))
+		{
+			cursor.y -= 10;
+		}
+		if (Key.isDown(Key.DOWN))
+		{
+			cursor.y += 10;
+		}
+		if (Key.isDown(Key.LEFT))
+		{
+			cursor.x -= 10;
+		}
+		if (Key.isDown(Key.RIGHT))
+		{
+			cursor.x += 10;
+		}
+
+		if (cursor.x < world.x) cursor.x = Std.int(world.x);
+		if (cursor.x+20 > world.width)  cursor.x = Std.int(world.width)-20;
+		if (cursor.y < world.y)  cursor.y = Std.int(world.y);
+		if (cursor.y+20 > world.height)  cursor.y = Std.int(world.height)-20;
+	
+		
+		var mx:Int = cursor.x;
+		var my:Int = cursor.y;
+		var actionKeyDown:Bool = Key.isDown(Key.SPACE);
+
 		cursor.state = "pointer";
 		var firstOver : Bool = false;
 		if (!gameover && playing){
@@ -352,15 +389,41 @@ class Game extends AbstractGame
 			frameTime--;
 			timeText = formatTime(frameTime);
 			timeTextUI.text = timeText;
+			
+			if (actionKeyDown){
+				cursor.state = "shock2";
+				for (worker in workers) {
+					trace("hamster",worker.x, worker.y);
+					if (mx < worker.x - worker.radius ) continue;
+					if (mx > worker.x + worker.radius ) continue;
+					if (my < worker.y - worker.radius ) continue;
+					if (my > worker.y + worker.radius ) continue;
+					worker.shocked();
+					break;
+				}
+			}
+		
+			var noFocus:Bool = true;
 			for (worker in workers) {
 				
 				worker.halo.visible = false;
+				
+				if (MathUtils.intSquareDistance(mx, my, worker.x, worker.y) < worker.radius * 2 * worker.radius * 2){
+					noFocus = false;
+					if(worker != currentFocus){
+						cursor.x = mx = worker.x;
+						cursor.y = my = worker.y;
+						currentFocus = worker;
+					}
+				}
+				
 				if (!firstOver && (mx >= worker.x - worker.radius )
 				&& (mx <= worker.x + worker.radius ) 
 				&& (my >= worker.y - worker.radius ) 
 				&& (my <= worker.y + worker.radius ) 
 				){
 					firstOver = true;
+					
 					worker.halo.visible = true;
 					cursor.state = "shock1";
 					
@@ -371,6 +434,10 @@ class Game extends AbstractGame
 				}
 					
 			}
+			if (noFocus){
+				currentFocus = null;
+			}
+			trace("currentFocus:",currentFocus,noFocus);
 			gauge.progress(currentLoading, totalLoading);
 			
 		
@@ -406,7 +473,7 @@ class Game extends AbstractGame
 		
 		renderingEngine.ysort(Context.LAYER_CONTENT);
 		
-		if (Key.isDown(Key.Z))
+		/*if (Key.isDown(Key.Z))
         {
             renderingEngine.buffer.camera.centerY += 10;
           
@@ -423,44 +490,37 @@ class Game extends AbstractGame
         if (Key.isDown(Key.D))
         {
            renderingEngine.buffer.camera.centerX -= 10;
-        }
+        }*/
 		
 		 if (Key.isDown(Key.R))
         {
            this.start();
         }
 		
-		if (!playing && Key.isToggled(Key.SPACE))
+
+		
+
+		
+		if ( Key.isToggled(Key.SPACE))
         {
-			playing = true;
-            sequence.destroyed = true;
-			for (worker in workers) {
-					worker.work(worker.currentWorkbench);
-				}
-		    renderingEngine.clearLayer(Context.LAYER_MESSAGES);
+			if(!playing){
+				playing = true;
+				sequence.destroyed = true;
+				for (worker in workers) {
+						worker.work(worker.currentWorkbench);
+					}
+				renderingEngine.clearLayer(Context.LAYER_MESSAGES);
+			}
         }
 		
-		if (Mouse.isDown() && !gameover && playing){
-			
-			cursor.state = "shock2";
-			for (worker in workers) {
-				trace("hamster",worker.x, worker.y);
-				if (mx < worker.x - worker.radius ) continue;
-				if (mx > worker.x + worker.radius ) continue;
-				if (my < worker.y - worker.radius ) continue;
-				if (my > worker.y + worker.radius ) continue;
-				worker.shocked();
-				break;
-				
-			}
-		}
-
+		
+/*
 		if (renderingEngine.buffer.camera.centerX > world.x) renderingEngine.buffer.camera.centerX = Std.int(world.x);
 		if (renderingEngine.buffer.camera.centerX < world.width)  renderingEngine.buffer.camera.centerX = Std.int(world.width);
 		if (renderingEngine.buffer.camera.centerY > world.y)  renderingEngine.buffer.camera.centerY = Std.int(world.y);
 		if (renderingEngine.buffer.camera.centerY < world.height)  renderingEngine.buffer.camera.centerY = Std.int(world.height);
 		renderingEngine.buffer.camera.update();
-		
+		*/
 		
 	}
 	
