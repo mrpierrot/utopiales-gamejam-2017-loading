@@ -103,6 +103,7 @@ class Game extends AbstractGame
 	
 	public function start() :Void {
 		level = _createLevel();
+		
 	}
 	
 	
@@ -209,7 +210,8 @@ class Game extends AbstractGame
 				{
 					var workbench:Workbench =  createWorkbench(pCell);
 					var worker = createWorker(pCell);
-					worker.work(workbench);
+					//worker.work(workbench);
+					worker.currentWorkbench = workbench;
 				},
 				layers : [
 					"lights" => {fill:"light"}
@@ -309,7 +311,6 @@ class Game extends AbstractGame
 			},
 			function(cb:Int->Void):Void{ 
 				playing = true;
-				
 			}
 		]);
 
@@ -433,7 +434,9 @@ class Game extends AbstractGame
         {
 			playing = true;
             sequence.destroyed = true;
-			
+			for (worker in workers) {
+					worker.work(worker.currentWorkbench);
+				}
 		    renderingEngine.clearLayer(Context.LAYER_MESSAGES);
         }
 		
