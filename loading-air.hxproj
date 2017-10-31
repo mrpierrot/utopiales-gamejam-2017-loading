@@ -4,14 +4,14 @@
   <output>
     <movie outputType="Application" />
     <movie input="" />
-    <movie path="bin\loading.swf" />
+    <movie path="bin\loading-air.swf" />
     <movie fps="30" />
     <movie width="800" />
     <movie height="600" />
     <movie version="12" />
     <movie minorVersion="0" />
-    <movie platform="Flash Player" />
-    <movie background="#000000" />
+    <movie platform="AIR" />
+    <movie background="#FFFFFF" />
   </output>
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>
@@ -28,7 +28,7 @@
   </build>
   <!-- haxelib libraries -->
   <haxelib>
-    <!-- example: <library name="..." /> -->
+    <library name="air3" />
   </haxelib>
   <!-- Class files to compile (other referenced classes will automatically be included) -->
   <compileTargets>
@@ -48,9 +48,9 @@
   <postBuildCommand alwaysRun="False" />
   <!-- Other project options -->
   <options>
-    <option showHiddenPaths="True" />
-    <option testMovie="Default" />
-    <option testMovieCommand="" />
+    <option showHiddenPaths="False" />
+    <option testMovie="Custom" />
+    <option testMovieCommand="bat\RunApp.bat" />
   </options>
   <!-- Plugin storage -->
   <storage />
