@@ -10,7 +10,7 @@ cd %~dp0 & cd ..
 :: NOTICE: all paths are relative to project root
 
 :: Your certificate information
-set CERT_NAME="loading-air"
+set CERT_NAME="Hamster-Damn"
 set CERT_PASS=pouet
 set CERT_FILE="bat\loading-air.p12"
 set SIGNING_OPTIONS=-storetype pkcs12 -keystore %CERT_FILE% -storepass %CERT_PASS%
@@ -28,7 +28,7 @@ set APP_ID=%APP_ID: =%
 
 :: Output
 set AIR_PATH=air
-set AIR_NAME=loading-air
+set AIR_NAME=Hamster-Damn
 
 :validation
 findstr /C:"<id>%APP_ID%</id>" "%APP_XML%" > NUL

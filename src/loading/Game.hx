@@ -295,7 +295,7 @@ class Game extends AbstractGame
 		
 		sequence = Sequence.create([
 			function(cb:Int->Void):Void{  
-				messages.create("Hamster Damn", "center", "center", "simple"); cb(100); 
+				messages.create("Hamster Damn\n\nCrédits\n- Graphiste : Pierre Laloge\n- Développeur: Pierre Chabiland\n- Sound designer: Louis Godart", "center", "center", "simple"); cb(100); 
 				messages.create("Appuyez sur [ESPACE] pour continuer", "center", "bottom", "hbox", -1, 
 					function():Bool{ 
 						if (Key.isToggled(Key.SPACE)){ return true; }
@@ -354,21 +354,27 @@ class Game extends AbstractGame
     {
 		//cursor.x = Mouse.localX;
 		//cursor.y = Mouse.localY-6;
+		var cursorMoved:Bool = false;
+		var cursorSpeed:Int = 8;
 		if (Key.isDown(Key.UP))
 		{
-			cursor.y -= 10;
+			cursor.y -= cursorSpeed;
+			cursorMoved = true;
 		}
 		if (Key.isDown(Key.DOWN))
 		{
-			cursor.y += 10;
+			cursor.y += cursorSpeed;
+			cursorMoved = true;
 		}
 		if (Key.isDown(Key.LEFT))
 		{
-			cursor.x -= 10;
+			cursor.x -= cursorSpeed;
+			cursorMoved = true;
 		}
 		if (Key.isDown(Key.RIGHT))
 		{
-			cursor.x += 10;
+			cursor.x += cursorSpeed;
+			cursorMoved = true;
 		}
 
 		if (cursor.x < world.x) cursor.x = Std.int(world.x);
@@ -408,9 +414,13 @@ class Game extends AbstractGame
 				
 				worker.halo.visible = false;
 				
-				if (MathUtils.intSquareDistance(mx, my, worker.x, worker.y) < worker.radius * 2 * worker.radius * 2){
+				if (
+					worker.state != "work"
+					&& worker.state != "goWork"
+					&& MathUtils.intSquareDistance(mx, my, worker.x, worker.y) < worker.radius * 2 * worker.radius * 2
+				){
 					noFocus = false;
-					if(worker != currentFocus){
+					if(worker != currentFocus || !cursorMoved){
 						cursor.x = mx = worker.x;
 						cursor.y = my = worker.y;
 						currentFocus = worker;
@@ -437,7 +447,7 @@ class Game extends AbstractGame
 			if (noFocus){
 				currentFocus = null;
 			}
-			trace("currentFocus:",currentFocus,noFocus);
+			//trace("currentFocus:",currentFocus,noFocus);
 			gauge.progress(currentLoading, totalLoading);
 			
 		

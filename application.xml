@@ -3,14 +3,14 @@
 	
 	<id>loading-air</id> 
 	<versionNumber>1.0</versionNumber> 
-	<filename>loading-air</filename> 
+	<filename>Hamster-Damn</filename> 
 	
-	<name>loading-air</name> 
+	<name>Hamster Damn</name> 
 	<description></description> 
 	<copyright></copyright> 
 	
 	<initialWindow> 
-		<title>loading-air</title> 
+		<title>Hamster Damn</title> 
 		<content>loading-air.swf</content> 
 		<systemChrome>standard</systemChrome> 
 		<transparent>false</transparent> 
